@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -11,10 +12,12 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text HighScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
+    private int highScore;
     
     private bool m_GameOver = false;
 
@@ -22,6 +25,11 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        LoadHighScore();
+        Debug.Log(highScore);
+        HighScoreText.text = "Highest Score: " + MenuManager.userName + " " + highScore.ToString();
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -72,5 +80,38 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        if (m_Points >= highScore)
+        {
+            SaveHighScore(m_Points);
+        }
+    }
+
+
+    [System.Serializable]
+    class SaveData
+    {
+        public int highScore;
+    }
+
+    public void SaveHighScore(int score)
+    {
+        SaveData highScore = new SaveData();
+        highScore.highScore = score;
+
+        string json = JsonUtility.ToJson(highScore);
+        File.WriteAllText(Application.persistentDataPath + "savefile.json", json);
+    }
+
+    public void LoadHighScore()
+    {
+        string path = Application.persistentDataPath + "savefile.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            highScore = data.highScore;
+        }
     }
 }
